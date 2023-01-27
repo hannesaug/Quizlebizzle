@@ -5,7 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.example.quizit.QuizViewModel
 import com.example.quizit.databinding.FragmentQuizBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -14,7 +15,10 @@ class QuizFragment: Fragment() {
 
     private lateinit var binding: FragmentQuizBinding
 
-    private val viewModel: QuizViewModel by viewModels()
+//    private val viewModel: QuizViewModel by viewModels()
+
+    private val viewModel: QuizViewModel by activityViewModels()
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,28 +30,44 @@ class QuizFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        updateUi()
+
+        viewModel.gameEnd.observe(viewLifecycleOwner) {
+            if (it) {
+                findNavController().navigate(QuizFragmentDirections.actionQuizFragmentToFragmentEndresult())
+            }
+        }
+
+
+        viewModel.score.observe(viewLifecycleOwner) {
+            binding.scoreText.text = it.toString()
+        }
+
+        viewModel.currentQuestion.observe(viewLifecycleOwner) {
+            binding.questionText.text = it.name
+        }
+
+
 
 
         binding.musicianButton.setOnClickListener {
             viewModel.checkAnswer(true)
-            updateUi()
+
         }
 
         binding.footballButton.setOnClickListener {
             viewModel.checkAnswer(false)
-            updateUi()
+
         }
 
     }
-    private fun updateUi() {
+    /*private fun updateUi() {
         binding.scoreText.text = viewModel.score.toString()
         binding.questionText.text = viewModel.currentQuestion.name
 
-        if (viewModel.totalscore == 5) {
+        if (viewModel.totalscore.value == 5) {
             showEndDialog()
         }
-    }
+    }*/
 
     private fun showEndDialog(){
         MaterialAlertDialogBuilder(requireContext())
@@ -59,10 +79,9 @@ class QuizFragment: Fragment() {
             }
             .setPositiveButton("nochmal") { _,_ ->
                 viewModel.restartGame()
-                updateUi()
+
             }
             .show()
-
 
 
     }
